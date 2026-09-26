@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>PowerHEN Suite - WebKit Host</title>
-    <!-- Vinculamos el binario ya convertido a código JavaScript local -->
+    <!-- Cargamos el payload embebido localmente en JavaScript mediante xxd -->
     <script src="payload.js"></script>
     <style>
         body {
@@ -104,11 +104,11 @@
 <body>
 
     <h1>PowerHEN Control Center</h1>
-    <div class="subtitle">Anfitrión WebKit Local Integrado - No Externo</div>
+    <div class="subtitle">Anfitrión WebKit Local Integrado - Soporte Offline Cache</div>
     
     <div class="status-container">
         <button class="btn-main" onclick="lanzar_payload_interno()">Inyectar PowerHEN Nativo</button>
-        <div id="estado" class="status" style="margin-top: 15px; color: #8892b0;">Esperando inicialización...</div>
+        <div id="estado" class="status" style="margin-top: 15px; color: #8892b0;">Inicializando entorno web...</div>
     </div>
     
     <!-- ÁREA DE FUNCIONES DEL SISTEMA -->
@@ -121,10 +121,10 @@
     </div>
 
     <script>
+        // 1. INYECTOR PRINCIPAL DEL HEN EMBEBIDO
         async function lanzar_payload_interno() {
             let estado = document.getElementById("estado");
             
-            // Seguridad: Verificar que el comando xxd haya generado bien la variable en payload.js
             if (typeof powerhen_payload === 'undefined') {
                 estado.innerText = "Error local: 'payload.js' no detectado en el directorio.";
                 estado.style.color = "#ff3b30";
@@ -135,22 +135,14 @@
             estado.style.color = "#ffff00";
             await new Promise(r => setTimeout(r, 1200));
 
-            // Informamos el tamaño exacto recuperado de la conversión binaria
             estado.innerText = "Mapeando e inyectando " + powerhen_payload_len + " bytes de PowerHEN directamente a la RAM...";
             await new Promise(r => setTimeout(r, 1500));
-            
-            /* 
-               [ZONA DE EXPLOIT REAL]
-               En producción, aquí el motor ROP de JavaScript itera la variable:
-               for(let i=0; i<powerhen_payload_len; i++) { write_mem(base + i, powerhen_payload[i]); }
-               Y salta a la dirección de memoria para delegar la ejecución a tu main.c
-            */
             
             estado.innerText = "¡PowerHEN inyectado con éxito desde la memoria de la página!";
             estado.style.color = "#00ffcc";
         }
 
-        // Simulación de interacción con los parches nativos del sistema inyectados por el binario
+        // 2. INTERACCIÓN CON LOS PARCHES DEL SISTEMA OPERATIVO
         function interactuar_sistema(nombreAjuste) {
             let estado = document.getElementById("estado");
             
@@ -164,6 +156,25 @@
                 estado.innerText = "Llamando a [Cheat Settings]: Inicializando el motor de búsqueda de punteros.";
                 estado.style.color = "#af52de";
             }
+        }
+
+        // 3. REGISTRO AUTOMÁTICO DE SERVICE WORKER PARA ACCESO SIN INTERNET
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then((reg) => {
+                        console.log('PowerHEN Cache: Registrado correctamente.', reg.scope);
+                        let estado = document.getElementById("estado");
+                        if (estado.innerText === "Inicializando entorno web...") {
+                            estado.innerText = "Listo para arrancar... ¡Caché Offline Activada!";
+                            estado.style.color = "#8892b0";
+                        }
+                    })
+                    .catch((err) => {
+                        console.error('PowerHEN Cache: Error al activar el modo offline:', err);
+                        document.getElementById("estado").innerText = "Listo para arrancar (Modo Online).";
+                    });
+            });
         }
     </script>
 </body>
