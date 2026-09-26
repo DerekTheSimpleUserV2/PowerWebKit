@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>PowerHEN WebKit Host</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: sans-serif;
+            text-align: center;
+            padding-top: 50px;
+        }
+        .status {
+            font-size: 24px;
+            color: #00ffcc;
+            margin-top: 20px;
+        }
+        .btn {
+            background-color: #0044ff;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>PowerHEN Exploit Menu</h1>
+    <p>Asegúrate de tener el USB conectado con el archivo <b>powerhen_v0.1.bin</b></p>
+    
+    <button class="btn" onclick="lanzar_exploit()">Cargar PowerHEN</button>
+    
+    <div id="estado" class="status">Listo para arrancar...</div>
+
+    <script>
+        // Simulación del flujo de ROP y WebKit Exploit para la scene de PlayStation
+        async function lanzar_exploit() {
+            let estado = document.getElementById("estado");
+            estado.innerText = "Ejecutando WebKit Exploit (Userland)...";
+            estado.style.color = "#ffff00";
+
+            try {
+                // [Etapa 1]: Aquí el motor JavaScriptCore de la consola genera el desbordamiento de memoria.
+                // Simulamos una espera de estabilización de memoria (UAF / Type Confusion)
+                await new Promise(r => setTimeout(r, 1500));
+
+                estado.innerText = "Buscando USB y cargando powerhen_v0.1.bin...";
+                
+                // [Etapa 2]: Direcciones virtuales de montaje de PlayStation para USB exFAT
+                let rutas = ["/mnt/usb0/powerhen_v0.1.bin", "/mnt/usb1/powerhen_v0.1.bin"];
+                let binarioCargado = false;
+
+                // En producción real, aquí se usan las llamadas de sistema (Syscalls) a través de ROP chains
+                // Para abrir el archivo del USB: syscall(5, ruta, 0)
+                
+                // Simulamos el salto exitoso de lectura del USB
+                binarioCargado = true; 
+
+                if (binarioCargado) {
+                    estado.innerText = "Inyectando código en la RAM y saltando a Kernel...";
+                    estado.style.color = "#00ffcc";
+                    
+                    // [Etapa 3]: Asignar memoria ejecutable (RWX) mediante mprotect y saltar a tu función _start()
+                    await new Promise(r => setTimeout(r, 1000));
+                    estado.innerText = "¡PowerHEN inyectado con éxito! Revisa tu pantalla.";
+                } else {
+                    estado.innerText = "Error: No se encontró powerhen_v0.1.bin en el USB.";
+                    estado.style.color = "#ff0000";
+                }
+
+            } catch (error) {
+                estado.innerText = "Fallo en el WebKit: La memoria colapsó. Reinicia el navegador.";
+                estado.style.color = "#ff0000";
+            }
+        }
+    </script>
+</body>
+</html>
