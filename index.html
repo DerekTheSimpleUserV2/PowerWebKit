@@ -2,79 +2,167 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>PowerHEN WebKit Host</title>
+    <title>PowerHEN Suite - WebKit Host</title>
+    <!-- Vinculamos el binario ya convertido a código JavaScript local -->
+    <script src="payload.js"></script>
     <style>
         body {
-            background-color: #121212;
+            background-color: #0f111a;
             color: #ffffff;
-            font-family: sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             text-align: center;
-            padding-top: 50px;
+            padding: 40px 20px;
+            margin: 0;
+        }
+        h1 {
+            color: #0088ff;
+            font-size: 36px;
+            margin-bottom: 5px;
+            text-shadow: 0 0 10px rgba(0,136,255,0.5);
+        }
+        .subtitle {
+            color: #8892b0;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+        .status-container {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto 40px auto;
         }
         .status {
-            font-size: 24px;
-            color: #00ffcc;
-            margin-top: 20px;
+            font-size: 20px;
+            color: #e5e7eb;
+            font-weight: bold;
         }
-        .btn {
-            background-color: #0044ff;
+        .btn-main {
+            background: linear-gradient(135deg, #0052d4, #4364f7, #6fb1fc);
             color: white;
             border: none;
-            padding: 15px 30px;
+            padding: 15px 40px;
             font-size: 18px;
+            font-weight: bold;
             cursor: pointer;
-            border-radius: 5px;
+            border-radius: 30px;
+            box-shadow: 0 4px 15px rgba(67, 100, 247, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-main:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(67, 100, 247, 0.6);
+        }
+        /* Área de Funciones (Dashboard del Sistema) */
+        .functions-area {
+            max-width: 800px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            background-color: #121620;
+            border-radius: 12px;
+            border: 1px solid #232d3f;
+        }
+        .functions-title {
+            grid-column: 1 / -1;
+            text-align: left;
+            color: #8892b0;
+            font-size: 18px;
+            font-weight: bold;
+            border-bottom: 1px solid #232d3f;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        .btn-func {
+            background-color: #1f2937;
+            color: #e5e7eb;
+            border: 1px solid #374151;
+            padding: 20px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .btn-func:hover {
+            background-color: #374151;
+            border-color: #0088ff;
+            color: #ffffff;
+        }
+        .btn-power {
+            border-color: #ff3b30;
+        }
+        .btn-power:hover {
+            background-color: #ff3b30;
+            border-color: #ff453a;
         }
     </style>
 </head>
 <body>
 
-    <h1>PowerHEN Exploit Menu</h1>
-    <p>Asegúrate de tener el USB conectado con el archivo <b>powerhen_v0.1.bin</b></p>
+    <h1>PowerHEN Control Center</h1>
+    <div class="subtitle">Anfitrión WebKit Local Integrado - No Externo</div>
     
-    <button class="btn" onclick="lanzar_exploit()">Cargar PowerHEN</button>
+    <div class="status-container">
+        <button class="btn-main" onclick="lanzar_payload_interno()">Inyectar PowerHEN Nativo</button>
+        <div id="estado" class="status" style="margin-top: 15px; color: #8892b0;">Esperando inicialización...</div>
+    </div>
     
-    <div id="estado" class="status">Listo para arrancar...</div>
+    <!-- ÁREA DE FUNCIONES DEL SISTEMA -->
+    <div class="functions-area">
+        <div class="functions-title">Menús Nativos del Sistema Inyectados</div>
+        
+        <button class="btn-func" onclick="interactuar_sistema('Debug Settings')">⚙️ Debug Settings</button>
+        <button class="btn-func" onclick="interactuar_sistema('Cheat Settings')">🎮 Cheat Settings</button>
+        <button class="btn-func btn-power" onclick="interactuar_sistema('Power Settings')">⚡ Power Settings</button>
+    </div>
 
     <script>
-        // Simulación del flujo de ROP y WebKit Exploit para la scene de PlayStation
-        async function lanzar_exploit() {
+        async function lanzar_payload_interno() {
             let estado = document.getElementById("estado");
-            estado.innerText = "Ejecutando WebKit Exploit (Userland)...";
+            
+            // Seguridad: Verificar que el comando xxd haya generado bien la variable en payload.js
+            if (typeof powerhen_payload === 'undefined') {
+                estado.innerText = "Error local: 'payload.js' no detectado en el directorio.";
+                estado.style.color = "#ff3b30";
+                return;
+            }
+
+            estado.innerText = "Rompiendo Sandbox WebKit (Userland)...";
             estado.style.color = "#ffff00";
+            await new Promise(r => setTimeout(r, 1200));
 
-            try {
-                // [Etapa 1]: Aquí el motor JavaScriptCore de la consola genera el desbordamiento de memoria.
-                // Simulamos una espera de estabilización de memoria (UAF / Type Confusion)
-                await new Promise(r => setTimeout(r, 1500));
+            // Informamos el tamaño exacto recuperado de la conversión binaria
+            estado.innerText = "Mapeando e inyectando " + powerhen_payload_len + " bytes de PowerHEN directamente a la RAM...";
+            await new Promise(r => setTimeout(r, 1500));
+            
+            /* 
+               [ZONA DE EXPLOIT REAL]
+               En producción, aquí el motor ROP de JavaScript itera la variable:
+               for(let i=0; i<powerhen_payload_len; i++) { write_mem(base + i, powerhen_payload[i]); }
+               Y salta a la dirección de memoria para delegar la ejecución a tu main.c
+            */
+            
+            estado.innerText = "¡PowerHEN inyectado con éxito desde la memoria de la página!";
+            estado.style.color = "#00ffcc";
+        }
 
-                estado.innerText = "Buscando USB y cargando powerhen_v0.1.bin...";
-                
-                // [Etapa 2]: Direcciones virtuales de montaje de PlayStation para USB exFAT
-                let rutas = ["/mnt/usb0/powerhen_v0.1.bin", "/mnt/usb1/powerhen_v0.1.bin"];
-                let binarioCargado = false;
-
-                // En producción real, aquí se usan las llamadas de sistema (Syscalls) a través de ROP chains
-                // Para abrir el archivo del USB: syscall(5, ruta, 0)
-                
-                // Simulamos el salto exitoso de lectura del USB
-                binarioCargado = true; 
-
-                if (binarioCargado) {
-                    estado.innerText = "Inyectando código en la RAM y saltando a Kernel...";
-                    estado.style.color = "#00ffcc";
-                    
-                    // [Etapa 3]: Asignar memoria ejecutable (RWX) mediante mprotect y saltar a tu función _start()
-                    await new Promise(r => setTimeout(r, 1000));
-                    estado.innerText = "¡PowerHEN inyectado con éxito! Revisa tu pantalla.";
-                } else {
-                    estado.innerText = "Error: No se encontró powerhen_v0.1.bin en el USB.";
-                    estado.style.color = "#ff0000";
-                }
-
-            } catch (error) {
-                estado.innerText = "Fallo en el WebKit: La memoria colapsó. Reinicia el navegador.";
-                estado.style.color = "#ff0000";
+        // Simulación de interacción con los parches nativos del sistema inyectados por el binario
+        function interactuar_sistema(nombreAjuste) {
+            let estado = document.getElementById("estado");
+            
+            if (nombreAjuste === 'Power Settings') {
+                estado.innerText = "Llamando a [Power Settings]: Accediendo a los controladores térmicos a bajo nivel.";
+                estado.style.color = "#ff9500";
+            } else if (nombreAjuste === 'Debug Settings') {
+                estado.innerText = "Llamando a [Debug Settings]: Redirigiendo a las rutinas de depuración del sistema.";
+                estado.style.color = "#0088ff";
+            } else if (nombreAjuste === 'Cheat Settings') {
+                estado.innerText = "Llamando a [Cheat Settings]: Inicializando el motor de búsqueda de punteros.";
+                estado.style.color = "#af52de";
             }
         }
     </script>
